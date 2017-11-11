@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Starship</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #DDD;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+    </style>
+    <link href="build/bundle.css" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+<div id="ui"></div>
+<script type="text/javascript" src="build/bundle.js"></script>
+<script type="text/javascript">
+    window['layout-editor'].mount(document.getElementById('ui'))
+</script>
+</body>
+</html>
