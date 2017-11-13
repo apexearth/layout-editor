@@ -12,11 +12,13 @@
   "license": "ISC",
   "dependencies": {
     "@apexearth/layout": "^0.4.4",
+    "mouse-event-offset": "^3.0.2",
     "react": "^16.1.0",
     "react-dom": "^16.1.0",
     "user-input": "^1.5.0",
     "user-input-mapping": "^1.4.1",
-    "webpack": "^3.8.1"
+    "webpack": "^3.8.1",
+    "@apexearth/layout-draw": "latest"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
