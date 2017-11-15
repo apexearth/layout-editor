@@ -14,6 +14,7 @@ class Editor extends React.Component {
             mouseCurrent: null,
         }
         this.onMouseDown = event => {
+            if (this.state.mouseDown) return
             let coord = this.coordinates(event)
             this.setState({
                 mouseDown   : coord,
@@ -48,8 +49,8 @@ class Editor extends React.Component {
 
     coordinates(event) {
         let coord = offset(event, this.refs.canvas)
-        coord[0]  = Math.floor(coord[0] / this.state.scale) + this.layout.bounds.left
-        coord[1]  = Math.floor(coord[1] / this.state.scale) + this.layout.bounds.top
+        coord[0]  = Math.floor(coord[0] / this.state.scale) + 1
+        coord[1]  = Math.floor(coord[1] / this.state.scale) + 1
         return coord
     }
 
@@ -77,13 +78,7 @@ class Editor extends React.Component {
     render() {
         if (!this.layout) return null
         // Hacky way to do this o_0
-        setImmediate(() => {
-            draw(this.layout, {
-                canvas: this.refs.canvas,
-                scaleX: this.state.scale,
-                scaleY: this.state.scale,
-            })
-        })
+        setImmediate(() => this.draw())
         return (
             <div className="layout-editor"
                  onMouseDown={this.onMouseDown}
@@ -94,10 +89,18 @@ class Editor extends React.Component {
         )
     }
 
+    draw() {
+        draw(this.layout, {
+            canvas: this.refs.canvas,
+            scaleX: this.state.scale,
+            scaleY: this.state.scale,
+            width : this.layout.bounds.right,
+            height: this.layout.bounds.bottom,
+        })
+    }
+
     new() {
         const layout = new Layout()
-        layout.addSection(0, 0, 0, 0)
-        layout.addSection(0, 1, 0, 10)
         this.setState({layout})
     }
 
