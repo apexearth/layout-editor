@@ -10,6 +10,11 @@
   },
   "author": "",
   "license": "ISC",
+  "keywords": [
+    "react",
+    "layout",
+    "editor"
+  ],
   "dependencies": {
     "@apexearth/layout": "^0.4.4",
     "mouse-event-offset": "^3.0.2",
