@@ -13,34 +13,40 @@ class Editor extends React.Component {
             mouseDown   : null,
             mouseCurrent: null,
         }
-        this.onMouseDown = event => {
-            if (this.state.mouseDown) return
-            let coord = this.coordinates(event)
+        this.onMouseDown = this.onMouseDown.bind(this)
+        this.onMouseMove = this.onMouseMove.bind(this)
+        this.onMouseUp   = this.onMouseUp.bind(this)
+    }
+
+    onMouseDown(event) {
+        if (this.state.mouseDown) return
+        let coord = this.coordinates(event)
+        this.setState({
+            mouseDown   : coord,
+            mouseCurrent: coord,
+        })
+        this.createSection(coord, coord)
+    }
+
+    onMouseMove(event) {
+        if (!this.state.mouseDown) return
+        let coord = this.coordinates(event)
+        if (coord[0] !== this.state.mouseCurrent[0] ||
+            coord[1] !== this.state.mouseCurrent[1]) {
             this.setState({
-                mouseDown   : coord,
-                mouseCurrent: coord,
+                mouseCurrent: coord
             })
-            this.createSection(coord, coord)
+            this.createSection(this.state.mouseDown, coord)
         }
-        this.onMouseMove = event => {
-            if (!this.state.mouseDown) return
-            let coord = this.coordinates(event)
-            if (coord[0] !== this.state.mouseCurrent[0] ||
-                coord[1] !== this.state.mouseCurrent[1]) {
-                this.setState({
-                    mouseCurrent: coord
-                })
-                this.createSection(this.state.mouseDown, coord)
-            }
-        }
-        this.onMouseUp   = event => {
-            if (!this.state.mouseDown) return
-            this.setState({
-                mouseDown   : null,
-                mouseCurrent: null,
-                section     : null,
-            })
-        }
+    }
+
+    onMouseUp(event) {
+        if (!this.state.mouseDown) return
+        this.setState({
+            mouseDown   : null,
+            mouseCurrent: null,
+            section     : null,
+        })
     }
 
     get layout() {
@@ -90,6 +96,8 @@ class Editor extends React.Component {
     }
 
     draw() {
+        let context                   = this.refs.canvas.getContext('2d')
+        context.imageSmoothingEnabled = false
         draw(this.layout, {
             canvas: this.refs.canvas,
             scaleX: this.state.scale,
