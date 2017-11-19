@@ -10,6 +10,7 @@ class Editor extends React.Component {
         this.state       = {
             layout       : props.layout,
             scale        : 25,
+            corner       : '',
             mouseLeftDown: null,
             mouseCurrent : null,
         }
@@ -18,39 +19,32 @@ class Editor extends React.Component {
         this.onMouseUp   = this.onMouseUp.bind(this)
     }
 
-    handleMouseLeftDown(event) {
-        if (this.state.mouseLeftDown) return
-        let coord   = this.coordinates(event)
-        let section = this.layout.sectionsAt(coord[0], coord[1], this.state.section)[0]
-        if (section) {
-
-        } else {
-            this.setState({
-                mouseLeftDown: coord,
-                mouseCurrent : coord,
-            })
-            this.createSection(coord[0], coord[1], coord[0], coord[1])
-        }
-    }
-
-    handleMouseLeftUp(event) {
-        if (!this.state.mouseLeftDown) return
-        this.setState({
-            mouseLeftDown: null,
-            mouseCurrent : null,
-            section      : null,
-        })
-    }
-
     onMouseDown(event) {
         if (event.button === 0) {
-            this.handleMouseLeftDown(event)
+            if (this.state.mouseLeftDown) return
+            let coord   = this.coordinates(event)
+            let section = this.layout.sectionsAt(coord[0], coord[1], this.state.section)[0]
+            if (section) {
+                this.rotateSectionType(section)
+                this.draw()
+            } else {
+                this.setState({
+                    mouseLeftDown: coord,
+                    mouseCurrent : coord,
+                    section      : null,
+                })
+            }
         }
     }
 
     onMouseUp(event) {
         if (event.button === 0) {
-            this.handleMouseLeftUp(event)
+            if (!this.state.mouseLeftDown) return
+            this.setState({
+                mouseLeftDown: null,
+                mouseCurrent : null,
+                section      : null,
+            })
         }
     }
 
@@ -59,16 +53,8 @@ class Editor extends React.Component {
         let coord = this.coordinates(event)
         if (coord[0] !== this.state.mouseCurrent[0] || coord[1] !== this.state.mouseCurrent[1]) {
             this.setState({mouseCurrent: coord})
-            const left   = Math.min(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
-            const top    = Math.min(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
-            const right  = Math.max(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
-            const bottom = Math.max(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
-            if (this.layout.isEmptyWithin(left, top, right, bottom, this.state.section)) {
-                this.createSection(left, top, right, bottom)
-            }
         }
     }
-
 
     get layout() {
         return this.state.layout
@@ -81,13 +67,27 @@ class Editor extends React.Component {
         return coord
     }
 
-    createSection(left, top, right, bottom) {
+    createSection(left, top, right, bottom, corner) {
         if (this.state.section) {
             this.state.section.remove()
         }
-        this.setState({
-            section: this.layout.addSection(left, top, right, bottom)
-        })
+        const section = this.layout.add({left, top, right, bottom, corner})
+        this.setState({section})
+        return section
+    }
+
+    rotateSectionType(section) {
+        if (section.corner === '') {
+            section.corner = 'top-left'
+        } else if (section.corner === 'top-left') {
+            section.corner = 'top-right'
+        } else if (section.corner === 'top-right') {
+            section.corner = 'bottom-left'
+        } else if (section.corner === 'bottom-left') {
+            section.corner = 'bottom-right'
+        } else if (section.corner === 'bottom-right') {
+            section.corner = ''
+        }
     }
 
     componentDidMount() {
@@ -96,10 +96,25 @@ class Editor extends React.Component {
         }
     }
 
+    componentWillUpdate() {
+        const corner = this.state.corner
+        if (this.state.mouseLeftDown) {
+            const left   = Math.min(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
+            const top    = Math.min(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
+            const right  = Math.max(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
+            const bottom = Math.max(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
+            if (this.layout.isEmptyWithin(left, top, right, bottom, this.state.section)) {
+                this.createSection(left, top, right, bottom, corner)
+            }
+        }
+    }
+
+    componentDidUpdate() {
+        this.draw()
+    }
+
     render() {
         if (!this.layout) return null
-        // Hacky way to do this o_0
-        setImmediate(() => this.draw())
         return (
             <div className="layout-editor"
                  onMouseDown={this.onMouseDown}
