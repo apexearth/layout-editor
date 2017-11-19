@@ -1,1 +1,1 @@
-module.exports = require('./editor')
+module.exports = require('./Editor')
