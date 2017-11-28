@@ -23,7 +23,7 @@ class Editor extends React.Component {
         if (event.button === 0) {
             if (this.state.mouseLeftDown) return
             let coord   = this.coordinates(event)
-            let section = this.layout.sectionsAt(coord[0], coord[1], this.state.section)[0]
+            let section = this.layout.sectionsAt(coord[0], coord[1], this.layout.currentSection)[0]
             if (section) {
                 this.rotateSectionType(section)
                 this.draw()
@@ -31,7 +31,6 @@ class Editor extends React.Component {
                 this.setState({
                     mouseLeftDown: coord,
                     mouseCurrent : coord,
-                    section      : null,
                 })
             }
         }
@@ -40,10 +39,10 @@ class Editor extends React.Component {
     onMouseUp(event) {
         if (event.button === 0) {
             if (!this.state.mouseLeftDown) return
+            this.layout.currentSection = undefined
             this.setState({
                 mouseLeftDown: null,
                 mouseCurrent : null,
-                section      : null,
             })
         }
     }
@@ -68,12 +67,29 @@ class Editor extends React.Component {
     }
 
     createSection(left, top, right, bottom, corner) {
-        if (this.state.section) {
-            this.state.section.remove()
+        if (this.layout.currentSection) {
+            this.layout.currentSection.remove()
+            this.layout.currentSection = undefined
         }
-        const section = this.layout.add({left, top, right, bottom, corner})
-        this.setState({section})
+        const section              = this.layout.add({left, top, right, bottom, corner})
+        this.layout.currentSection = section
         return section
+    }
+
+    _createSectionWithin() {
+        let xDirection = this.state.mouseCurrent[0] < this.state.mouseLeftDown[0] ? 1 : -1
+        let yDirection = this.state.mouseCurrent[1] < this.state.mouseLeftDown[1] ? 1 : -1
+        let left       = Math.min(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
+        let right      = Math.max(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
+        for (; left <= right; xDirection > 0 ? left += xDirection : right += xDirection) {
+            let top    = Math.min(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
+            let bottom = Math.max(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
+            for (; top <= bottom; yDirection > 0 ? top += yDirection : bottom += yDirection) {
+                if (this.layout.isEmptyWithin(left, top, right, bottom, this.layout.currentSection)) {
+                    return this.createSection(left, top, right, bottom, this.state.corner)
+                }
+            }
+        }
     }
 
     rotateSectionType(section) {
@@ -97,19 +113,12 @@ class Editor extends React.Component {
     }
 
     componentWillUpdate() {
-        const corner = this.state.corner
-        if (this.state.mouseLeftDown) {
-            const left   = Math.min(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
-            const top    = Math.min(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
-            const right  = Math.max(this.state.mouseLeftDown[0], this.state.mouseCurrent[0])
-            const bottom = Math.max(this.state.mouseLeftDown[1], this.state.mouseCurrent[1])
-            if (this.layout.isEmptyWithin(left, top, right, bottom, this.state.section)) {
-                this.createSection(left, top, right, bottom, corner)
-            }
-        }
     }
 
     componentDidUpdate() {
+        if (this.state.mouseLeftDown) {
+            this._createSectionWithin()
+        }
         this.draw()
     }
 
